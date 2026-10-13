@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Produk</title>
+<style>
+  :root{
+    --purple:#7c3aed;
+    --purple2:#a855f7;
+    --black:#0f0f12;
+    --card:#18181b;
+    --text:#f4f4f5;
+    --muted:#a1a1aa;
+  }
+  *{box-sizing:border-box; font-family: Inter, Poppins, sans-serif;}
+  body{
+    margin:0; background: radial-gradient(800px at top, #2a1a4d, var(--black));
+    color:var(--text); display:flex; justify-content:center; padding:20px; min-height:100vh;
+  }
+  .container{
+    width:100%; max-width:420px; background:var(--card);
+    border:1px solid #27272a; border-radius:20px; padding:24px;
+    box-shadow: 0 0 40px rgba(124,58,237,0.25);
+  }
+  h2{margin:0 0 6px; text-align:center; color:white;}
+  p.sub{margin:0 0 20px; text-align:center; color:var(--muted); font-size:14px;}
+  .label{font-size:13px; color:var(--muted); margin:18px 0 8px; text-transform:uppercase; letter-spacing:1px;}
+  .options{display:flex; flex-direction:column; gap:10px;}
+  .opt{
+    background:#0f0f12; border:1px solid #3f3f46; border-radius:12px;
+    padding:14px 16px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+    transition: all .25s ease;
+  }
+  .opt.active{
+    border-color:var(--purple); 
+    background: linear-gradient(90deg, rgba(124,58,237,0.22), rgba(124,58,237,0.05));
+    box-shadow: 0 0 0 1px rgba(124,58,237,0.3) inset;
+  }
+  .opt b{font-size:15px;}
+  .opt span{font-size:12px; color:var(--muted);}
+  .dot{
+    width:22px; height:22px; border-radius:50%; 
+    border:2px solid #52525b; display:grid; place-items:center;
+    transition: all .2s ease; flex-shrink:0; position:relative;
+  }
+  .dot::after{
+    content:''; width:0px; height:0px; background:var(--purple2); 
+    border-radius:50%; transition: all .2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 10px var(--purple2);
+  }
+  .opt.active .dot{ border-color:var(--purple2); background: rgba(168,85,247,0.1); }
+  .opt.active .dot::after{ width:12px; height:12px; }
+  .detail-box{
+    margin-top:18px; background:#0a0a0b; border:1px dashed #3f3f46;
+    border-radius:12px; padding:16px; display:none;
+  }
+  .detail-box.show{display:block; animation: fade .3s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)}}
+  .copy-box{display:flex; gap:8px; margin-top:8px;}
+  .copy-box input{flex:1; background:#18181b; border:1px solid #3f3f46; border-radius:8px; padding:10px; color:white;}
+  .btn-small{background:var(--purple); border:none; color:white; padding:10px 14px; border-radius:8px; cursor:pointer; font-weight:600;}
+  img.qris{width:100%; border-radius:10px; margin-top:10px; border:1px solid #27272a;}
+  .btn-confirm{
+    margin-top:22px; width:100%; padding:14px; border:none; border-radius:12px;
+    background: linear-gradient(90deg, var(--purple), var(--purple2));
+    color:white; font-weight:700; font-size:15px; cursor:pointer;
+    box-shadow:0 8px 20px rgba(124,58,237,0.4);
+  }
+  .note{font-size:11px; color:var(--muted); text-align:center; margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Pembayaran Produk</h2>
+  <p class="sub">Silahkan pilih opsi untuk pembayaran produk</p>
+
+  <div class="label">Metode Pembayaran</div>
+  <div class="options">
+    <div class="opt" id="opt-dana" onclick="selectPay('dana')">
+      <div><b>DANA</b><br><span>Transfer ke nomor DANA</span></div>
+      <div class="dot"></div>
+    </div>
+    <div class="opt" id="opt-qris" onclick="selectPay('qris')">
+      <div><b>QRIS AllPayment</b><br><span>Scan QR untuk semua e-wallet</span></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <div id="danaBox" class="detail-box">
+    <div style="font-weight:600; color:#a855f7">Pembayaran via DANA</div>
+    <div style="font-size:13px; color:#a1a1aa; margin-top:4px">Transfer ke nomor di bawah ini:</div>
+    <div class="copy-box">
+      <input id="danaNumber" type="text" value="082253828421" readonly>
+      <button class="btn-small" onclick="copyDana()">Salin</button>
+    </div>
+    <div style="font-size:12px; color:#a1a1aa; margin-top:8px">A/N: NADIA NATASYA</div>
+  </div>
+
+  <div id="qrisBox" class="detail-box">
+    <div style="font-weight:600; color:#a855f7">Pembayaran via QRIS</div>
+    <div style="font-size:13px; color:#a1a1aa; margin-top:4px">Scan QR di bawah ini</div>
+    <img id="qrisImg" class="qris" src="https://files.catbox.moe/flw0vn.jpeg" alt="QRIS AllPayment">
+  </div>
+
+  <button class="btn-confirm" onclick="confirmPay()">Konfirmasi Pembayaran</button>
+  <div class="note">Setelah transfer, klik konfirmasi & kirim bukti ke WhatsApp</div>
+</div>
+
+<script>
+  let selected = null;
+  const WA_NUMBER = "6282253828421";
+
+  function selectPay(type){
+    selected = type;
+    document.querySelectorAll('.opt').forEach(o=>o.classList.remove('active'));
+    document.querySelectorAll('.detail-box').forEach(b=>b.classList.remove('show'));
+    if(type==='dana'){
+      document.getElementById('opt-dana').classList.add('active');
+      document.getElementById('danaBox').classList.add('show');
+    }else{
+      document.getElementById('opt-qris').classList.add('active');
+      document.getElementById('qrisBox').classList.add('show');
+    }
+  }
+  function copyDana(){
+    navigator.clipboard.writeText(document.getElementById('danaNumber').value);
+    alert('Nomor DANA disalin: 082253828421');
+  }
+  function confirmPay(){
+    if(!selected){ alert('Pilih metode dulu!'); return; }
+    // TEKS CUSTOM REQUEST KAMU
+    let pesan = encodeURIComponent("cek min udh aku tf😡✅");
+    window.open(`https://wa.me/${WA_NUMBER}?text=${pesan}`, '_blank');
+  }
+</script>
+</body>
+</html>
